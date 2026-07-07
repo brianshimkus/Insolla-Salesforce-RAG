@@ -26,11 +26,16 @@ Answer:"""
 )
 
 
-def answer(question: str) -> str:
+def answer_with_sources(question: str):
     docs = retriever.invoke(question)
     context = "\n\n".join(d.page_content for d in docs)
     chain = prompt | llm
-    return chain.invoke({"context": context, "question": question}).content
+    result = chain.invoke({"context": context, "question": question}).content
+    return result, docs
+
+
+def answer(question: str) -> str:
+    return answer_with_sources(question)[0]
 
 
 if __name__ == "__main__":
