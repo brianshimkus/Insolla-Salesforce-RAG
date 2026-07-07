@@ -15,7 +15,23 @@ for role, msg, sources in st.session_state.history:
                 for s in sources:
                     st.write("—", s.page_content)
 
-if q := st.chat_input("Ask about accounts, cases, escalations..."):
+q = None
+
+if not st.session_state.history:
+    st.write("Not sure where to start? Try one of these:")
+    sample_prompts = [
+        "What issues has Edge Communications reported?",
+        "Tell me about United Oil & Gas Corp.",
+        "What generator problems have been reported?",
+    ]
+    for prompt in sample_prompts:
+        if st.button(prompt, use_container_width=True):
+            q = prompt
+
+if typed := st.chat_input("Ask about accounts, cases, escalations..."):
+    q = typed
+
+if q:
     st.chat_message("user").write(q)
     st.session_state.history.append(("user", q, None))
 
