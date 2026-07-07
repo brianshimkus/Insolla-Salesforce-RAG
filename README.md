@@ -10,6 +10,8 @@ Streamlit · Salesforce (`simple-salesforce`, OAuth 2.0 JWT Bearer flow)
 
 **🔗 Live demo:** https://insolla-salesforce-rag-kjfm8hmmbzqm6j3hmyjeth.streamlit.app/
 
+![Screenshot of the Insolla Salesforce RAG chat UI, showing a grounded answer with retrieved source records](screenshot.png)
+
 ## Architecture
 
 ```
