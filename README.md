@@ -8,7 +8,7 @@ with sources shown for every answer.
 **Stack:** Python · OpenAI (embeddings + chat) · LangChain · Pinecone ·
 Streamlit · Salesforce (`simple-salesforce`, OAuth 2.0 JWT Bearer flow)
 
-**🔗 Live demo:** https://insolla-salesforce-rag-kjfm8hmmbzqm6j3hmyjeth.streamlit.app/
+**🔗 Live demo:** https://rag.insolla.ai/
 
 ![Screenshot of the Insolla Salesforce RAG chat UI, showing a grounded answer with retrieved source records](screenshot.png)
 
