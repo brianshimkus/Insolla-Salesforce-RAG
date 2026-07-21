@@ -10,7 +10,6 @@ store = PineconeVectorStore(
     index_name="insolla-salesforce-rag",
     embedding=OpenAIEmbeddings(model="text-embedding-3-small"),
 )
-retriever = store.as_retriever(search_kwargs={"k": 4})
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 prompt = ChatPromptTemplate.from_template(
@@ -26,8 +25,11 @@ Answer:"""
 )
 
 
-def answer_with_sources(question: str):
-    docs = retriever.invoke(question)
+def answer_with_sources(question: str, filter: dict | None = None, k: int = 4):
+    # filter narrows candidates by exact metadata (e.g. amount, is_closed)
+    # before similarity ranking - semantic search alone can't reliably
+    # match numeric thresholds like "over $100k", only topical relevance.
+    docs = store.similarity_search(question, k=k, filter=filter)
     context = "\n\n".join(d.page_content for d in docs)
     chain = prompt | llm
     result = chain.invoke({"context": context, "question": question}).content

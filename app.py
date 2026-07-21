@@ -16,17 +16,28 @@ for role, msg, sources in st.session_state.history:
                     st.write("—", s.page_content)
 
 q = None
+q_kwargs = {}
 
 if not st.session_state.history:
     st.write("Not sure where to start? Try one of these:")
+    # Each sample carries its own retrieval strategy. The deal-amount
+    # question uses a Pinecone metadata filter instead of plain semantic
+    # search - "over $100k" is a numeric threshold, and embeddings alone
+    # can't reliably match that, only topical similarity.
     sample_prompts = [
-        "What issues has Edge Communications reported?",
-        "Tell me about United Oil & Gas Corp.",
-        "What generator problems have been reported?",
+        ("What issues has Edge Communications reported?",
+         {"filter": {"type": "case"}, "k": 4}),
+        ("Tell me about United Oil & Gas Corp.", {}),
+        ("Which open deals are worth over $100k?", {
+            "filter": {"type": "opportunity", "is_closed": False,
+                       "amount": {"$gte": 100000}},
+            "k": 10,
+        }),
     ]
-    for prompt in sample_prompts:
+    for prompt, kwargs in sample_prompts:
         if st.button(prompt, use_container_width=True):
             q = prompt
+            q_kwargs = kwargs
 
 if typed := st.chat_input("Ask about accounts, cases, escalations..."):
     q = typed
@@ -36,7 +47,7 @@ if q:
     st.session_state.history.append(("user", q, None))
 
     with st.spinner("Searching Salesforce data..."):
-        a, docs = answer_with_sources(q)
+        a, docs = answer_with_sources(q, **q_kwargs)
 
     with st.chat_message("assistant"):
         st.write(a)

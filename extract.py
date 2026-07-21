@@ -23,7 +23,16 @@ accounts = sf.query_all(
     "BillingCity, Description FROM Account"
 )["records"]
 
-print(f"Pulled {len(cases)} cases, {len(accounts)} accounts")
+opportunities = sf.query_all(
+    "SELECT Name, Amount, StageName, CloseDate, Probability, IsClosed, "
+    "IsWon, Type, Account.Name FROM Opportunity"
+)["records"]
+
+print(f"Pulled {len(cases)} cases, {len(accounts)} accounts, "
+      f"{len(opportunities)} opportunities")
 
 with open("sf_data.json", "w") as f:
-    json.dump({"cases": cases, "accounts": accounts}, f, indent=2, default=str)
+    json.dump(
+        {"cases": cases, "accounts": accounts, "opportunities": opportunities},
+        f, indent=2, default=str,
+    )

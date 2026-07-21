@@ -1,9 +1,9 @@
 # Insolla-Salesforce-RAG
 
-A RAG (Retrieval-Augmented Generation) app that pulls support cases and account
-data from a Salesforce dev org, embeds it into Pinecone, and answers
-natural-language questions about it, grounded in the actual data, with
-sources shown for every answer.
+A RAG (Retrieval-Augmented Generation) app that pulls cases, accounts, and
+opportunities from a Salesforce dev org, embeds them into Pinecone, and
+answers natural-language questions about it, grounded in the actual data,
+with sources shown for every answer.
 
 **Stack:** Python · OpenAI (embeddings + chat) · LangChain · Pinecone ·
 Streamlit · Salesforce (`simple-salesforce`, OAuth 2.0 JWT Bearer flow)
@@ -20,17 +20,24 @@ Salesforce API → JSON records → text docs → OpenAI embeddings → Pinecone
 User question → embed question → similarity search (top-k) → prompt + context → LLM → answer
 ```
 
-1. **`extract.py`**: pulls Cases and Accounts from Salesforce via SOQL.
+1. **`extract.py`**: pulls Cases, Accounts, and Opportunities from Salesforce
+   via SOQL.
 2. **`documents.py`**: converts each structured record into a plain-English
-   paragraph (embedding models work on natural language, not raw JSON).
+   paragraph (embedding models work on natural language, not raw JSON), and
+   builds a matching metadata dict per document (type, amount, is_closed,
+   etc.) for structured filtering later.
 3. **`ingest.py`**: embeds every document (`text-embedding-3-small`) and
-   stores the vectors in a Pinecone index.
-4. **`rag.py`**: at question time, embed the question, retrieve the
-   nearest `k=4` document vectors, then hand them to the LLM (`gpt-4o-mini`,
-   `temperature=0`) as context, with an explicit instruction not to answer
-   beyond that context.
-5. **`app.py`**: Streamlit chat UI over `rag.py`, showing the retrieved
-   source records alongside every answer.
+   stores the vectors, with their metadata, in a Pinecone index. Clears the
+   index first so re-running it is idempotent instead of duplicating data.
+4. **`rag.py`**: at question time, embed the question, retrieve the nearest
+   document vectors (`k=4` by default), then hand them to the LLM
+   (`gpt-4o-mini`, `temperature=0`) as context, with an explicit instruction
+   not to answer beyond that context. Retrieval also accepts an optional
+   Pinecone metadata `filter` (used for numeric/boolean criteria like "open
+   deals over $100k") since semantic similarity alone can't reliably match
+   exact thresholds, only topical relevance.
+5. **`app.py`**: Streamlit chat UI over `rag.py`, with clickable sample
+   prompts and the retrieved source records shown alongside every answer.
 
 ## Setup
 
@@ -69,7 +76,12 @@ integrations, not just a workaround.
   full re-embed every time.
 - **Retrieval evaluation**: a small labeled set of question/expected-answer
   pairs to catch retrieval regressions when `*_to_text` formatting or `k`
-  changes, rather than eyeballing answers.
+  changes, rather than eyeballing answers. This isn't hypothetical: adding
+  Opportunities to the corpus silently broke an existing, previously-reliable
+  question (an account with several deals started crowding out that same
+  account's support cases in the top-k results). A query classifier that
+  picks a metadata `type` filter based on question intent, instead of relying
+  on plain semantic ranking, would fix this generally rather than per-query.
 - **Cost monitoring**: track embedding + completion token usage per query;
   `k` directly trades off recall against both noise and per-query cost.
 - **Conversational memory**: multi-turn chat that remembers prior context

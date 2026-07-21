@@ -17,10 +17,14 @@ if not pc.has_index(index_name):
         metric="cosine",
         spec=ServerlessSpec(cloud="aws", region="us-east-1"),
     )
+else:
+    # Clear existing vectors first so re-running this script is safe and
+    # idempotent, instead of accumulating duplicate documents on each run.
+    pc.Index(index_name).delete(delete_all=True)
 
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
 store = PineconeVectorStore(index_name=index_name, embedding=embeddings)
 
-docs = load_documents()
-store.add_texts(docs)
+docs, metadatas = load_documents()
+store.add_texts(docs, metadatas=metadatas)
 print(f"Embedded and stored {len(docs)} documents.")
