@@ -1,6 +1,8 @@
 import streamlit as st
 from rag import answer_with_sources
 
+st.set_page_config(page_title="Insolla — Salesforce Intelligence", page_icon="🔎")
+
 st.title("Insolla — Salesforce Intelligence")
 st.caption("RAG over live Salesforce data · OpenAI + LangChain + Pinecone")
 
